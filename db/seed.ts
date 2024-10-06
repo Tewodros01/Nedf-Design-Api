@@ -7,7 +7,7 @@ let prisma = new PrismaClient({
 
 async function main() {
   for (let customer of customers) {
-    await prisma.customer.create({
+    await prisma.user.create({
       data: customer,
     });
   }

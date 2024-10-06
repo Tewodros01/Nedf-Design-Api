@@ -1,17 +1,17 @@
 import { Router } from "express";
 import {
-  deleteCustomer,
-  getCustomer,
-  getCustomers,
+  deleteuser,
+  getuser,
+  getusers,
 } from "../controllers/customers";
 import { adminOnly } from "../middlewares/authHandler";
 
 const router = Router();
 
-router.get("/", adminOnly, getCustomers);
+router.get("/", adminOnly, getusers);
 
 router
-  .get("/:id", adminOnly, getCustomer)
-  .delete("/:id", adminOnly, deleteCustomer);
+  .get("/:id", adminOnly, getuser)
+  .delete("/:id", adminOnly, deleteuser);
 
 export default router;

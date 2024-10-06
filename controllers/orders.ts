@@ -141,7 +141,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
   // Create an order
   const order = await prisma.order.create({
     data: {
-      customerId: parseInt(customerId!),
+      userId: parseInt(customerId!),
       shippingAddress: shippingAddress as string,
       deliveryDate: deliveryDate,
       totalPrice: parseFloat(totalPrice as string),
@@ -149,7 +149,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
       deliveryType,
     },
     include: {
-      customer: true,
+      User: true,
     },
   });
 
@@ -207,7 +207,7 @@ export const createOrder = asyncHandler(async (req, res, next) => {
 
       // send email to user
       await sendMail({
-        email: order.customer.email,
+        email: order.User.email,
         subject: "Haru Fashion Order Received",
         message,
       });

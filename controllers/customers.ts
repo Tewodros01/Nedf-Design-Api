@@ -4,12 +4,17 @@ import { resource404Error } from "../utils/errorObject";
 import ErrorResponse from "../utils/errorResponse";
 
 /**
- * Get all customers
- * @route   GET /api/v1/customers
+ * Get all users
+ * @route   GET /api/v1/users
  * @access  Private
  */
-export const getCustomers = asyncHandler(async (req, res, next) => {
-  const customers = await prisma.customer.findMany({
+export const getusers = asyncHandler(async (req, res, next) => {
+  const users = await prisma.user.findMany({
+    where: {
+      role: {
+        not: 'ADMIN',
+      },
+    },
     // prisma desn't provide exclude yet, thus I have to
     // specify these fields to exclude some fields like password. sucks!
     select: {
@@ -25,20 +30,20 @@ export const getCustomers = asyncHandler(async (req, res, next) => {
 
   res.status(200).json({
     success: true,
-    count: customers.length,
-    data: customers,
+    count: users.length,
+    data: users,
   });
 });
 
 /**
- * Get specific customer
- * @route   GET /api/v1/customers/:id
+ * Get specific user
+ * @route   GET /api/v1/users/:id
  * @access  Private
  */
-export const getCustomer = asyncHandler(async (req, res, next) => {
+export const getuser = asyncHandler(async (req, res, next) => {
   const id = parseInt(req.params.id);
 
-  const customer = await prisma.customer.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id },
     select: {
       id: true,
@@ -51,26 +56,26 @@ export const getCustomer = asyncHandler(async (req, res, next) => {
     },
   });
 
-  // Throws 404 error if customer not found
-  if (!customer) {
-    return next(new ErrorResponse(resource404Error("customer"), 404));
+  // Throws 404 error if user not found
+  if (!user) {
+    return next(new ErrorResponse(resource404Error("user"), 404));
   }
 
   res.status(200).json({
     success: true,
-    data: customer,
+    data: user,
   });
 });
 
 /**
- * Delete customer
- * @route   DEETE /api/v1/customers/:id
+ * Delete user
+ * @route   DEETE /api/v1/users/:id
  * @access  Private
  */
-export const deleteCustomer = asyncHandler(async (req, res, next) => {
+export const deleteuser = asyncHandler(async (req, res, next) => {
   const id = parseInt(req.params.id);
 
-  await prisma.customer.delete({
+  await prisma.user.delete({
     where: { id },
   });
 

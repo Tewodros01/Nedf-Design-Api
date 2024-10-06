@@ -32,8 +32,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^3.1.1",
+    "@prisma/client": "^3.15.2",
     "@sendgrid/mail": "^7.6.1",
+    "@types/multer": "^1.4.12",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
@@ -41,6 +42,8 @@
     "express-rate-limit": "^5.4.1",
     "helmet": "^4.6.0",
     "jsonwebtoken": "^8.5.1",
+    "multer": "^1.4.5-lts.1",
+    "next": "^14.2.14",
     "nodemailer": "^6.6.5"
   },
   "devDependencies": {
@@ -59,11 +62,11 @@
     "jest-mock-extended": "^2.0.4",
     "jest-sorted": "^1.0.12",
     "morgan": "^1.10.0",
-    "nodemon": "^2.0.13",
+    "nodemon": "^2.0.22",
     "prisma": "^3.1.1",
     "supertest": "^6.1.6",
     "ts-jest": "^27.0.5",
-    "ts-node": "^10.2.1",
-    "typescript": "^4.4.3"
+    "ts-node": "^10.9.2",
+    "typescript": "^4.9.5"
   }
 }

@@ -1,4 +1,5 @@
 import express from "express";
+import multer from 'multer'
 // import morgan from "morgan";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -19,6 +20,8 @@ const app = express();
 
 // Enable CORS
 app.use(cors());
+const upload = multer({ dest: 'uploads/' })
+app.use('/uploads', express.static('uploads'));
 
 // Set HTTP Hseaders
 app.use(helmet());

@@ -3,10 +3,10 @@ import {
   changePassword,
   forgotPassword,
   getMe,
-  loginCustomer,
-  registerCustomer,
+  loginuser,
+  registeruser,
   resetPassword,
-  updateCustomerSelf,
+  updateuserSelf,
 } from "../controllers/auth";
 import { protect } from "../middlewares/authHandler";
 
@@ -14,9 +14,9 @@ const router = Router();
 
 router
   .get("/me", protect, getMe)
-  .post("/register", registerCustomer)
-  .post("/login", loginCustomer)
-  .put("/update-details", protect, updateCustomerSelf)
+  .post("/register", registeruser)
+  .post("/login", loginuser)
+  .put("/update-details", protect, updateuserSelf)
   .put("/change-password", protect, changePassword)
   .post("/forgot-password", forgotPassword)
   .put("/reset-password/:resetToken", resetPassword);

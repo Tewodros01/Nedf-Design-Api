@@ -17,7 +17,7 @@ import errorObj, {
   invalidQuery,
   resource404Error,
 } from "../utils/errorObject";
-
+import { NextFunction, Request } from 'express';
 /**
  * Get all products
  * @route   GET /api/v1/products
@@ -39,7 +39,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
   // init variables
   let select: Prisma.ProductSelect | ProductSelectType | undefined;
   let orderBy:
-    | Prisma.Enumerable<Prisma.ProductOrderByWithRelationInput>
+    | Prisma.Enumerable<Prisma.ProductOrderByWithAggregationInput>
     | undefined;
   let skip: number | undefined;
   let take: number | undefined;
@@ -300,91 +300,70 @@ export const getProduct = asyncHandler(async (req, res, next) => {
  * @route   POST /api/v1/products
  * @access  Private
  */
-export const createProduct = asyncHandler(async (req, res, next) => {
-  type RequiredFieldsType = {
-    name: string | undefined;
-    price: string | undefined;
-    description: string | undefined;
-    image1: string | undefined;
-    image2: string | undefined;
-  };
+// Define a type for req.files
+ 
 
-  let {
-    name,
-    price,
-    description,
-    image1,
-    image2,
-    discountPercent,
-    detail,
-    categoryId,
-    stock,
-  } = req.body;
+export const createProduct = asyncHandler(async (req: any, res, next) => {
+  // Destructure fields from request body
+  const { name, price, description, discountPercent, detail, categoryId, stock } = req.body;
 
-  const requiredFields: RequiredFieldsType = {
-    name,
-    price,
-    description,
-    image1,
-    image2,
-  };
+  // Access uploaded image files from req.files
+  const image1 = (req.files as { [fieldname: string]: Express.Multer.File[] }).image1?.[0]?.filename; // Filename for the first image
+  const image2 = (req.files as { [fieldname: string]: Express.Multer.File[] }).image2?.[0]?.filename; // Filename for the second image
 
-  // Throws error if required field is not specified
+  // Debugging: log the filenames to ensure they are being accessed correctly
+  console.log("Image 1 Filename:", image1);
+  console.log("Image 2 Filename:", image2);
+
+  // Validate required fields
+  const requiredFields = { name, price, description, image1, image2 };
   const hasError = checkRequiredFields(requiredFields, next);
   if (hasError !== false) return hasError;
 
-  // Throws error if price field is not number or negative number
+  // Validate price
   if (!parseFloat(price) || parseFloat(price) < 0) {
-    return next(new ErrorResponse(invalidPriceError, 400));
+    return next(new ErrorResponse('Invalid price' as any, 400));
   }
 
-  // Throws error if stock field is not integer
+  // Validate stock if provided
+  let parsedStock: number | null = null;
   if (stock) {
-    if (stock && !isIntegerAndPositive(stock)) {
-      return next(new ErrorResponse(invalidStockError, 400));
+    if (!isIntegerAndPositive(stock)) {
+      return next(new ErrorResponse('Invalid stock value' as any, 400));
     }
-    stock = parseInt(stock);
+    parsedStock = parseInt(stock);
   }
 
-  // Throws error if categoryId is invalid
+  // Validate and parse categoryId if provided
+  let parsedCategoryId: number | null = null;
   if (categoryId) {
     const category = await prisma.category.findUnique({
-      where: { id: parseInt(categoryId) },
+      where: { id: parseInt(categoryId) }
     });
     if (!category) {
-      return next(new ErrorResponse(invalidCategoryError(categoryId), 400));
+      return next(new ErrorResponse(`Invalid category ID: ${categoryId}` as any, 400));
     }
-    categoryId = parseInt(categoryId);
+    parsedCategoryId = parseInt(categoryId);
   }
 
-  // let id: any;
-  // if (process.env.NODE_ENV === "testing") {
-  //   id = parseInt(req.body.id);
-  // }
-
+  // Create product in the database
   const product = await prisma.product.create({
     data: {
-      // id, // only for testing
       name,
-      price,
+      price: parseFloat(price),
       discountPercent,
       description,
       detail,
       category: {
-        connect: { id: categoryId },
+        connect: { id: parsedCategoryId as any},
       },
-      image1,
-      image2,
-      stock,
-      // tags: {
-      //   create: [{ name: "trendy" }],
-      // },
-      // categories: {
-      //   create: [{ name: 'Magic' }, { name: 'Butterflies' }],
-      // },
-    },
+      image1, // Filename of the first uploaded image
+      image2, // Filename of the second uploaded image
+      stock: parsedStock,
+    }
   });
 
+  // Send success response with the newly created product
   res.status(201).json({
     success: true,
     data: product,
@@ -481,12 +460,13 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
  */
 export const deleteProduct = asyncHandler(async (req, res, next) => {
   const id = parseInt(req.params.id);
+console.log(id);
 
   await prisma.product.delete({
     where: { id },
   });
 
-  res.status(204).json({
+  res.status(200).json({
     success: true,
     data: [],
   });

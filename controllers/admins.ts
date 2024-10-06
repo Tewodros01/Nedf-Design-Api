@@ -341,7 +341,7 @@ export const seedData = asyncHandler(async (req, res, next) => {
   }
 
   for (let customer of customers) {
-    await prisma.customer.create({
+    await prisma.user.create({
       data: customer,
     });
   }

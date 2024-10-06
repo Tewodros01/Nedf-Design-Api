@@ -14,6 +14,7 @@ enum Role {
   SUPERADMIN
   ADMIN
   MODERATOR
+  CUSTOMER
 }
 
 model Admin {
@@ -69,7 +70,7 @@ model Tag {
   @@map("tags")
 }
 
-model Customer {
+model User {
   id                Int       @id @default(autoincrement())
   fullname          String    @db.VarChar(50)
   email             String    @db.VarChar(50) @unique
@@ -81,14 +82,15 @@ model Customer {
   resetPwdExpire    BigInt?    @db.BigInt @map("reset_password_expire")
   createdAt        DateTime     @default(now()) @map("created_at")
   updatedAt        DateTime?    @map("updated_at")
+  role        Role      @default(CUSTOMER)
   
-  @@map("customers")
+  @@map("users")
 }
 
 model Order {
   orderNumber       Int           @id @default(autoincrement()) @map("order_number")
-  customer          Customer      @relation(fields: [customerId], references: [id])
-  customerId        Int           @map("customer_id")
+  User          User      @relation(fields: [userId], references: [id])
+  userId        Int           @map("userId")
   shippingAddress   String        @map("shipping_address")
   township          String?       @db.VarChar(20)
   city              String?       @db.VarChar(20)

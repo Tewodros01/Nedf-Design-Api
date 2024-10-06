@@ -31,7 +31,7 @@ export const protect = asyncHandler(async (req: ExtendedRequest, res, next) => {
   // Verify token
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    req.user = await prisma.customer.findUnique({
+    req.user = await prisma.user.findUnique({
       where: { id: parseInt((decoded as JwtPayload).id) },
     });
     next();

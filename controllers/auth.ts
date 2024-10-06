@@ -22,11 +22,11 @@ import { ExtendedRequest } from "../utils/extendedRequest";
 import sendMail from "../utils/sendEmail";
 
 /**
- * Register new customer
+ * Register new user
  * @route   POST /api/v1/auth/register
  * @access  Public
  */
-export const registerCustomer = asyncHandler(async (req, res, next) => {
+export const registeruser = asyncHandler(async (req, res, next) => {
   const email: string = req.body.email;
   const fullname: string = req.body.fullname;
   let password: string = req.body.password;
@@ -51,7 +51,7 @@ export const registerCustomer = asyncHandler(async (req, res, next) => {
   // Hash password
   password = await hashPassword(password);
 
-  const customer = await prisma.customer.create({
+  const user = await prisma.user.create({
     data: {
       email,
       fullname,
@@ -61,57 +61,58 @@ export const registerCustomer = asyncHandler(async (req, res, next) => {
     },
   });
 
-  const token = generateToken(customer.id, customer.email);
+  const token = generateToken(user.id, user.email);
 
   res.status(201).json({
     success: true,
-    id: customer.id,
+    id: user.id,
     token: token,
   });
 });
 
 /**
- * Login customer
+ * Login user
  * @route   POST /api/v1/auth/login
  * @access  Public
  */
-export const loginCustomer = asyncHandler(async (req, res, next) => {
+export const loginuser = asyncHandler(async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
+console.log(req.body);
 
   // Check required fields
   const requiredFields = { email, password };
   const hasError = checkRequiredFields(requiredFields, next);
   if (hasError !== false) return hasError;
 
-  const customer = await prisma.customer.findUnique({
+  const user = await prisma.user.findUnique({
     where: { email },
   });
 
-  // Throws error if customer does not exist
-  if (!customer) {
+  // Throws error if user does not exist
+  if (!user) {
     return next(new ErrorResponse(incorrectCredentialsError, 401));
   }
 
   // Check pwd with hashed pwd stored in db
-  const result = await comparePassword(password, customer.password);
+  const result = await comparePassword(password, user.password);
 
   // Throws error if password is incorrect
   if (!result) {
     return next(new ErrorResponse(incorrectCredentialsError, 401));
   }
 
-  const token = generateToken(customer.id, customer.email);
+  const token = generateToken(user.id, user.email);
 
   res.status(200).json({
     success: true,
     token: token,
     data: {
-      id: customer.id,
-      email: customer.email,
-      fullname: customer.fullname,
-      shippingAddress: customer.shippingAddress,
-      phone: customer.phone,
+      id: user.id,
+      email: user.email,
+      fullname: user.fullname,
+      shippingAddress: user.shippingAddress,
+      phone: user.phone,
     },
   });
 });
@@ -122,7 +123,7 @@ export const loginCustomer = asyncHandler(async (req, res, next) => {
  * @access  Private
  */
 export const getMe = asyncHandler(async (req: ExtendedRequest, res, next) => {
-  const user = await prisma.customer.findUnique({
+  const user = await prisma.user.findUnique({
     where: { id: req!.user!.id },
     select: {
       id: true,
@@ -140,11 +141,11 @@ export const getMe = asyncHandler(async (req: ExtendedRequest, res, next) => {
 });
 
 /**
- * Update Customer Details (self)
+ * Update user Details (self)
  * @route   PUT /api/v1/auth/update-details
  * @access  Private
  */
-export const updateCustomerSelf = asyncHandler(
+export const updateuserSelf = asyncHandler(
   async (req: ExtendedRequest, res, next) => {
     const fullname: string | undefined = req.body.fullname;
     const shippingAddress: string | undefined = req.body.shippingAddress;
@@ -156,7 +157,7 @@ export const updateCustomerSelf = asyncHandler(
       return next(new ErrorResponse(invalidEmail, 400));
     }
 
-    const updatedCustomer = await prisma.customer.update({
+    const updateduser = await prisma.user.update({
       where: { id: req!.user!.id },
       data: {
         fullname,
@@ -176,13 +177,13 @@ export const updateCustomerSelf = asyncHandler(
 
     res.status(200).json({
       success: true,
-      data: updatedCustomer,
+      data: updateduser,
     });
   }
 );
 
 /**
- * Update Customer Password (self)
+ * Update user Password (self)
  * @route   PUT /api/v1/auth/change-password
  * @access  Private
  */
@@ -217,7 +218,7 @@ export const changePassword = asyncHandler(
     // Hash new password
     const hashedPassword = await hashPassword(newPassword);
 
-    await prisma.customer.update({
+    await prisma.user.update({
       where: { id: req!.user!.id },
       data: { password: hashedPassword },
     });
@@ -244,7 +245,7 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
   const [resetToken, resetPwdToken, resetPwdExpire] = generateResetPwdToken();
 
   // Save pwdToken and pwdExpire in the db
-  const customer = await prisma.customer.update({
+  const user = await prisma.user.update({
     where: { email },
     data: {
       resetPwdToken: resetPwdToken as string,
@@ -264,7 +265,7 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
 
   try {
     await sendMail({
-      email: customer.email,
+      email: user.email,
       subject: "Password reset token (valid for 10min)",
       message,
     });
@@ -277,8 +278,8 @@ export const forgotPassword = asyncHandler(async (req, res, next) => {
     console.error(err);
 
     // Save user
-    await prisma.customer.update({
-      where: { id: customer.id },
+    await prisma.user.update({
+      where: { id: user.id },
       data: {
         resetPwdToken: null,
         resetPwdExpire: null,
@@ -307,22 +308,22 @@ export const resetPassword = asyncHandler(async (req, res, next) => {
     .update(resetToken)
     .digest("hex");
 
-  const customer = await prisma.customer.findUnique({
+  const user = await prisma.user.findUnique({
     where: { resetPwdToken },
   });
 
   // Throws error if token not found
-  if (!customer) return next(new ErrorResponse(invalidTokenError, 400));
+  if (!user) return next(new ErrorResponse(invalidTokenError, 400));
 
   // Throws error if token is expired
-  if ((customer.resetPwdExpire as bigint) < Date.now()) {
+  if ((user.resetPwdExpire as bigint) < Date.now()) {
     return next(new ErrorResponse(expireTokenError, 400));
   }
 
   const hashedPassword = await hashPassword(password);
 
   // Update password and token data
-  await prisma.customer.update({
+  await prisma.user.update({
     where: { resetPwdToken },
     data: {
       password: hashedPassword,

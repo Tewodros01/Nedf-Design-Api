@@ -65,7 +65,7 @@ export const registeruser = asyncHandler(async (req, res, next) => {
 
   res.status(201).json({
     success: true,
-    id: user.id,
+    user: user,
     token: token,
   });
 });
@@ -78,7 +78,6 @@ export const registeruser = asyncHandler(async (req, res, next) => {
 export const loginuser = asyncHandler(async (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-console.log(req.body);
 
   // Check required fields
   const requiredFields = { email, password };
@@ -113,6 +112,7 @@ console.log(req.body);
       fullname: user.fullname,
       shippingAddress: user.shippingAddress,
       phone: user.phone,
+      role:user.role
     },
   });
 });

@@ -127,3 +127,11 @@ model OrderDetail {
   @@id([orderNumber, productId])
   @@map("order_details")
 }
+
+model Swiper {
+  id        Int      @id @default(autoincrement()) // Primary key with auto-increment
+  title     String   @db.VarChar(255)              // Title of the image
+  filePath  String   @db.VarChar(255)              // File path of the uploaded image
+  createdAt DateTime @default(now())               // Timestamp when the image was uploaded
+  updatedAt DateTime @updatedAt                    // Automatically updated on every record update
+}

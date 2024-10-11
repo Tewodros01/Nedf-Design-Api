@@ -32,7 +32,7 @@ export const registeruser = asyncHandler(async (req, res, next) => {
   let password: string = req.body.password;
   const shippingAddress: string = req.body.shippingAddress;
   const phone: string = req.body.phone; // null
-
+// const {data}=req.body;
   // Check required fields
   const requiredFields = { email, fullname, password };
   const hasError = checkRequiredFields(requiredFields, next);

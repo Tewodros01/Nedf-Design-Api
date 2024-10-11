@@ -13,6 +13,7 @@ import categories from "./routers/categories";
 import products from "./routers/products";
 import customers from "./routers/customers";
 import admins from "./routers/admins";
+import swiper from "./routers/swiper";
 import auth from "./routers/auth";
 import orders from "./routers/orders";
 
@@ -45,6 +46,8 @@ app.use("/api/v1/orders", orders);
 app.use("/api/v1/customers", customers);
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/admins", admins);
+app.use("/api/v1/swipper", swiper);
+
 
 // 404 error if route not found
 app.all("*", (req, res, next) =>

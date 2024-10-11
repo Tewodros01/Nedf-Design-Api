@@ -104,6 +104,17 @@ CREATE TABLE "order_details" (
 );
 
 -- CreateTable
+CREATE TABLE "Swiper" (
+    "id" SERIAL NOT NULL,
+    "title" VARCHAR(255) NOT NULL,
+    "filePath" VARCHAR(255) NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "Swiper_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "_ProductToTag" (
     "A" INTEGER NOT NULL,
     "B" INTEGER NOT NULL

@@ -35,6 +35,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
   const queryPrice = req.query.price;
   const queryStock = req.query.stock;
   const queryCategory = req.query.category;
+// console.log(queryPrice);
 
   // init variables
   let select: Prisma.ProductSelect | ProductSelectType | undefined;
@@ -118,10 +119,12 @@ export const getProducts = asyncHandler(async (req, res, next) => {
 
   // if price param is requested
   if (queryPrice) {
-    if (typeof queryPrice !== "string" && (queryPrice as string[]).length > 2) {
-      return next(new ErrorResponse(errObj, 400));
-    }
+    // if (typeof queryPrice !== "string" && (queryPrice as string[]).length > 2) {
+    //   return next(new ErrorResponse(errObj, 400));
+    // }
     price = filteredQty(queryPrice as string | string[]);
+    console.log(price);
+    
   }
 
   // if stock param is requested

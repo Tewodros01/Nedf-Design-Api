@@ -47,6 +47,7 @@ CREATE TABLE "products" (
     "stock" INTEGER DEFAULT 0,
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3),
+    "featured" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "products_pkey" PRIMARY KEY ("id")
 );

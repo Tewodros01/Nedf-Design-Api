@@ -23,6 +23,8 @@ import { NextFunction, Request } from 'express';
  * @route   GET /api/v1/products
  * @access  Public
  */
+
+
 export const getProducts = asyncHandler(async (req, res, next) => {
   type FilteredType = { [key: string]: number };
 
@@ -174,7 +176,161 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     data: products,
   });
 });
+ 
 
+// get fetured products
+export const getFeaturedProducts = asyncHandler(async (req, res, next) => {
+  type FilteredType = { [key: string]: number };
+
+  // requested queries
+  const querySelect = req.query.select;
+  const queryInclude = req.query.include;
+  const queryOrderBy = req.query.order_by;
+  const queryOffset = req.query.offset;
+  const queryLimit = req.query.limit;
+  const queryPrice = req.query.price;
+  const queryStock = req.query.stock;
+  const queryCategory = req.query.category;
+
+  // init variables
+  let select: Prisma.ProductSelect | ProductSelectType | undefined;
+  let orderBy:
+    | Prisma.Enumerable<Prisma.ProductOrderByWithAggregationInput>
+    | undefined;
+  let skip: number | undefined;
+  let take: number | undefined;
+  let price: FilteredType[] = [];
+  let stock: FilteredType[] = [];
+  let categoryId: number | undefined;
+
+  // return error if include field is not tags or category
+  if (queryInclude) {
+    const includedFields = (queryInclude as string).split(",");
+    let error = false;
+    includedFields.forEach((field) => {
+      if (field !== "tags" && field !== "category") {
+        error = true;
+      }
+    });
+
+    if (error) {
+      return next(
+        new ErrorResponse(
+          {
+            status: 400,
+            type: errorTypes.badRequest,
+            message: "include field is not correct",
+          },
+          400
+        )
+      );
+    }
+  }
+
+  // handle select and include logic
+  if (querySelect && !queryInclude) {
+    select = selectedQuery(querySelect as string);
+  } else if (querySelect && queryInclude) {
+    const selectedFields = selectedQuery(querySelect as string);
+    const includedFields = selectedQuery(queryInclude as string);
+    select = {
+      ...selectedFields,
+      ...includedFields,
+    };
+  } else if (!querySelect && queryInclude) {
+    const selectAll = selectAllProductField();
+    const includedFields = selectedQuery(queryInclude as string);
+    select = {
+      ...selectAll,
+      ...includedFields,
+    };
+  }
+
+  // if order_by param is requested
+  if (queryOrderBy) {
+    orderBy = orderedQuery(queryOrderBy as string);
+  }
+
+  // if offset param is requested
+  if (queryOffset) {
+    skip = parseInt(queryOffset as string);
+  }
+
+  // if limit param is requested
+  if (queryLimit) {
+    take = parseInt(queryLimit as string);
+  }
+
+  // error obj for price and stock
+  const errObj: errObjType = {
+    status: 400,
+    type: errorTypes.badRequest,
+    message: "same parameter cannot be more than twice",
+  };
+
+  // handle price filtering
+  if (queryPrice) {
+    if (typeof queryPrice !== "string" && (queryPrice as string[]).length > 2) {
+      return next(new ErrorResponse(errObj, 400));
+    }
+    price = filteredQty(queryPrice as string | string[]);
+  }
+
+  // handle stock filtering
+  if (queryStock) {
+    if (typeof queryStock !== "string" && (queryStock as string[]).length > 2) {
+      return next(new ErrorResponse(errObj, 400));
+    }
+    stock = filteredQty(queryStock as string | string[]);
+  }
+
+  // handle category filtering
+  if (queryCategory) {
+    const category = await prisma.category.findUnique({
+      where: { name: queryCategory as string },
+    });
+    if (!category) {
+      return next(new ErrorResponse(resource404Error("category"), 404));
+    }
+    categoryId = category.id;
+  }
+
+  // modify the Prisma query to filter prices less than or greater than the provided values
+  const products = await prisma.product.findMany({
+    select,
+    orderBy,
+    skip,
+    take,
+    where: {
+      AND: [
+        {
+          price: {
+            ...(price[0]?.lt && { lt: price[0].lt }), // if client asks for less than
+            ...(price[0]?.gt && { gt: price[0].gt }), // if client asks for greater than
+            ...(price[0]?.lte && { lte: price[0].lte }), // for less than or equal
+            ...(price[0]?.gte && { gte: price[0].gte }), // for greater than or equal
+          },
+        },
+        {
+          stock: {
+            ...(stock[0]?.lt && { lt: stock[0].lt }),
+            ...(stock[0]?.gt && { gt: stock[0].gt }),
+            ...(stock[0]?.lte && { lte: stock[0].lte }),
+            ...(stock[0]?.gte && { gte: stock[0].gte }),
+          },
+        },
+      ],
+      categoryId: categoryId ? { equals: categoryId } : undefined,
+      featured:1
+    },
+  });
+
+  res.status(200).json({
+    success: true,
+    count: products.length,
+    data: products,
+  });
+});
 
 /**
  * Get product count
@@ -442,7 +598,7 @@ export const updateProduct = asyncHandler(async (req, res, next) => {
  */
 export const deleteProduct = asyncHandler(async (req, res, next) => {
   const id = parseInt(req.params.id);
-console.log(id);
+ console.log(id);
 
   await prisma.product.delete({
     where: { id },
@@ -454,6 +610,25 @@ console.log(id);
   });
 });
 
+
+export const updateStatus = asyncHandler(async (req, res, next) => {
+  const id = parseInt(req.params.id);
+  const {enabled}=req.body;
+  console.log(req.body);
+  await prisma.product.update({
+    where: {
+      id: id
+    },
+    data: {
+      featured:enabled ? 1:0
+    }
+  });
+
+  res.status(200).json({
+    success: true,
+    data: [],
+  });
+});
 /*========================= Errors =============================*/
 const invalidPriceError = errorObj(
   400,

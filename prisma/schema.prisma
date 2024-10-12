@@ -58,7 +58,7 @@ model Product {
   updatedAt        DateTime?    @map("updated_at")
   product          OrderDetail[]
   tags             Tag[]
-
+  featured Int  @default(0)
   @@map("products")
 }
 

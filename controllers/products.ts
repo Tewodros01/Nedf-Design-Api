@@ -35,7 +35,6 @@ export const getProducts = asyncHandler(async (req, res, next) => {
   const queryPrice = req.query.price;
   const queryStock = req.query.stock;
   const queryCategory = req.query.category;
-// console.log(queryPrice);
 
   // init variables
   let select: Prisma.ProductSelect | ProductSelectType | undefined;
@@ -72,21 +71,17 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     }
   }
 
-  // if select & !include
+  // handle select and include logic
   if (querySelect && !queryInclude) {
     select = selectedQuery(querySelect as string);
-  }
-  // if select & include
-  else if (querySelect && queryInclude) {
+  } else if (querySelect && queryInclude) {
     const selectedFields = selectedQuery(querySelect as string);
     const includedFields = selectedQuery(queryInclude as string);
     select = {
       ...selectedFields,
       ...includedFields,
     };
-  }
-  // if include & !select
-  else if (!querySelect && queryInclude) {
+  } else if (!querySelect && queryInclude) {
     const selectAll = selectAllProductField();
     const includedFields = selectedQuery(queryInclude as string);
     select = {
@@ -117,17 +112,15 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     message: "same parameter cannot be more than twice",
   };
 
-  // if price param is requested
+  // handle price filtering
   if (queryPrice) {
-    // if (typeof queryPrice !== "string" && (queryPrice as string[]).length > 2) {
-    //   return next(new ErrorResponse(errObj, 400));
-    // }
+    if (typeof queryPrice !== "string" && (queryPrice as string[]).length > 2) {
+      return next(new ErrorResponse(errObj, 400));
+    }
     price = filteredQty(queryPrice as string | string[]);
-    console.log(price);
-    
   }
 
-  // if stock param is requested
+  // handle stock filtering
   if (queryStock) {
     if (typeof queryStock !== "string" && (queryStock as string[]).length > 2) {
       return next(new ErrorResponse(errObj, 400));
@@ -135,7 +128,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     stock = filteredQty(queryStock as string | string[]);
   }
 
-  // if req products with certain category
+  // handle category filtering
   if (queryCategory) {
     const category = await prisma.category.findUnique({
       where: { name: queryCategory as string },
@@ -146,6 +139,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     categoryId = category.id;
   }
 
+  // modify the Prisma query to filter prices less than or greater than the provided values
   const products = await prisma.product.findMany({
     select,
     orderBy,
@@ -154,40 +148,24 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     where: {
       AND: [
         {
-          AND: [
-            {
-              price: price[0],
-            },
-            {
-              price: price[1],
-            },
-          ],
+          price: {
+            ...(price[0]?.lt && { lt: price[0].lt }), // if client asks for less than
+            ...(price[0]?.gt && { gt: price[0].gt }), // if client asks for greater than
+            ...(price[0]?.lte && { lte: price[0].lte }), // for less than or equal
+            ...(price[0]?.gte && { gte: price[0].gte }), // for greater than or equal
+          },
         },
         {
-          AND: [
-            {
-              stock: stock[0],
-            },
-            {
-              stock: stock[1],
-            },
-          ],
+          stock: {
+            ...(stock[0]?.lt && { lt: stock[0].lt }),
+            ...(stock[0]?.gt && { gt: stock[0].gt }),
+            ...(stock[0]?.lte && { lte: stock[0].lte }),
+            ...(stock[0]?.gte && { gte: stock[0].gte }),
+          },
         },
       ],
-      categoryId: {
-        equals: categoryId,
-      },
-      // tags: {
-      //   some: {
-      //     name: { in: ["skirt"] },
-      //   },
-      // },
+      categoryId: categoryId ? { equals: categoryId } : undefined,
     },
-    // include: {
-    //   tags: true,
-    // },
-
-    // include: { category: true },
   });
 
   res.status(200).json({
@@ -196,6 +174,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     data: products,
   });
 });
+
 
 /**
  * Get product count

@@ -18,6 +18,7 @@ import errorObj, {
   resource404Error,
 } from "../utils/errorObject";
 import { NextFunction, Request } from 'express';
+import { equal } from "assert";
 /**
  * Get all products
  * @route   GET /api/v1/products
@@ -37,6 +38,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
   const queryPrice = req.query.price;
   const queryStock = req.query.stock;
   const queryCategory = req.query.category;
+  const querySearch = req.query.search; // New search query
 
   // init variables
   let select: Prisma.ProductSelect | ProductSelectType | undefined;
@@ -140,6 +142,7 @@ export const getProducts = asyncHandler(async (req, res, next) => {
     }
     categoryId = category.id;
   }
+ 
 
   // modify the Prisma query to filter prices less than or greater than the provided values
   const products = await prisma.product.findMany({
@@ -167,6 +170,8 @@ export const getProducts = asyncHandler(async (req, res, next) => {
         },
       ],
       categoryId: categoryId ? { equals: categoryId } : undefined,
+      name: querySearch as string ? { contains: querySearch as string } : undefined,
+
     },
   });
 

@@ -16,7 +16,7 @@ import admins from "./routers/admins";
 import swiper from "./routers/swiper";
 import auth from "./routers/auth";
 import orders from "./routers/orders";
-
+import dashboard from "./routers/dashbaord"
 const app = express();
 
 // Enable CORS
@@ -47,6 +47,8 @@ app.use("/api/v1/customers", customers);
 app.use("/api/v1/auth", auth);
 app.use("/api/v1/admins", admins);
 app.use("/api/v1/swipper", swiper);
+app.use("/api/v1/dashbaord", dashboard);
+
 
 
 // 404 error if route not found

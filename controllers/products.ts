@@ -376,22 +376,24 @@ export const getProductCount = asyncHandler(async (req, res, next) => {
  * @route   GET /api/v1/products/search
  * @access  Public
  */
+/**
+ * Search products
+ * @route   GET /api/v1/products/search
+ * @access  Public
+ */
 export const searchProducts = asyncHandler(async (req, res, next) => {
   const querySearch = req.query.q;
 
-  let search: string | undefined;
-  let searchObj: string | Prisma.StringFilter | undefined;
-
-  if (querySearch) {
-    search = (querySearch as string).replace(" ", "|");
-    searchObj = { search: search, mode: "insensitive" };
-  }
+  // Handle search functionality without `mode: 'insensitive'`
+  const search = querySearch ? querySearch.toString().toLowerCase() : "";
 
   const products = await prisma.product.findMany({
     where: {
-      name: searchObj,
-      description: searchObj,
-      detail: searchObj,
+      OR: [
+        { name: { contains: search } },
+        { description: { contains: search } },
+        { detail: { contains: search } },
+      ],
     },
   });
 
@@ -401,6 +403,7 @@ export const searchProducts = asyncHandler(async (req, res, next) => {
     data: products,
   });
 });
+
 
 /**
  * Get specific products

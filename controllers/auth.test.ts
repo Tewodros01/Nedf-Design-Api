@@ -158,7 +158,7 @@ describe("Auth Controller", () => {
       expect(response.body.message).toEqual("password has been updated");
 
       // delete user after register and test
-      const deleteUser = await prisma.customer.delete({
+      const deleteUser = await prisma.user.delete({
         where: { email: updateUser.email },
       });
       expect(deleteUser).toBeDefined();

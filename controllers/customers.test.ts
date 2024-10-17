@@ -78,7 +78,7 @@ describe("Customers", () => {
   describe("Delete Customer", () => {
     it("DELETE /customers/:id --> should delete a customer", async () => {
       // create a customer to be deleted
-      const customer = await prisma.customer.create({
+      const customer = await prisma.user.create({
         data: {
           email: "testuser3@gmail.com",
           fullname: "testuser",

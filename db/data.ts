@@ -1,6 +1,6 @@
 import { Role } from ".prisma/client";
 
-// Customer Data (10)
+// USER Data (10)
 export const customers: {
   fullname: string;
   email: string;
